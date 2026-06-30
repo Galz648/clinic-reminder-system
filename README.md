@@ -39,6 +39,14 @@ Also confirm `bunfig.toml` still preloads `test/load-env.ts` (for `reflect-metad
 
 This project compiles with `tsc` (`bun run build`) because `nest build` can hang in some local setups. Use `bun run typecheck` for a fast no-emit check.
 
+### `docker compose up` fails on port 54322
+
+Port `54322` is the default for Supabase CLI (`supabase start`). This project's app DB uses host port **54332** instead. Stop the other stack or keep `DATABASE_URL` pointed at `localhost:54332` per `.env.example`.
+
+### Temporal container exits immediately
+
+The `temporal` service needs `./dynamicconfig/development-sql.yaml` mounted into the container (see `docker-compose.yml`). If that file is missing, Temporal fails on startup with a dynamic config error.
+
 ## V0 data flow
 
 ```text
@@ -68,19 +76,34 @@ Terminal 2 — Temporal worker:
 bun run start:worker
 ```
 
-Create a reminder (due ~30s from now):
+Temporal UI:
+
+Open `http://localhost:8080` in your browser, or use `TEMPORAL_UI_URL` from `.env`.
+
+Create a reminder (due ~35s from now):
 
 ```bash
 source .env  # or: set -a && source .env && set +a
-curl -s -X POST "${API_PUBLIC_URL}/reminders" \
+API="$API_PUBLIC_URL"
+
+OWNER_ID=$(curl -sf -X POST "$API/owners" -H 'content-type: application/json' \
+  -d '{"name":"Jane Doe"}' | jq -r .id)
+PHONE_ID=$(curl -sf -X POST "$API/owners/$OWNER_ID/phone-numbers" -H 'content-type: application/json' \
+  -d '{"phone":"+972-50-123-4567"}' | jq -r .id)
+CASE_ID=$(curl -sf -X POST "$API/cases" -H 'content-type: application/json' \
+  -d '{"petName":"Luna"}' | jq -r .id)
+curl -sf -X POST "$API/cases/$CASE_ID/owners" -H 'content-type: application/json' \
+  -d "{\"ownerId\":\"$OWNER_ID\"}" > /dev/null
+
+curl -s -X POST "$API/reminders" \
   -H 'content-type: application/json' \
   -d '{
-    "petName": "Luna",
-    "ownerName": "Jane Doe",
-    "phone": "+972-50-123-4567",
+    "caseId": "'"$CASE_ID"'",
+    "ownerId": "'"$OWNER_ID"'",
+    "phoneNumberId": "'"$PHONE_ID"'",
     "reminderType": "vaccination",
     "message": "Luna is due for vaccination.",
-    "dueAt": "'"$(date -u -v+30S +%Y-%m-%dT%H:%M:%S.000Z 2>/dev/null || date -u -d '+30 seconds' +%Y-%m-%dT%H:%M:%S.000Z)"'"
+    "dueAt": "'"$(date -u -v+35S +%Y-%m-%dT%H:%M:%S.000Z 2>/dev/null || date -u -d '+35 seconds' +%Y-%m-%dT%H:%M:%S.000Z)"'"
   }' | jq .
 ```
 

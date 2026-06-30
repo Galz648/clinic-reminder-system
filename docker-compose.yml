@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: postgres
     ports:
-      - "54322:5432"
+      - "54332:5432"
     volumes:
       - supabase-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -41,6 +41,8 @@ services:
       DYNAMIC_CONFIG_FILE_PATH: config/dynamicconfig/development-sql.yaml
     ports:
       - "7233:7233"
+    volumes:
+      - ./dynamicconfig:/etc/temporal/config/dynamicconfig
 
   temporal-ui:
     image: temporalio/ui:2.31.2

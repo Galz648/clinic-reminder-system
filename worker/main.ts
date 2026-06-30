@@ -17,7 +17,7 @@ async function run() {
     connection,
     namespace: env.temporalNamespace,
     taskQueue,
-    workflowsPath: path.join(__dirname, 'workflows'),
+    workflowsPath: path.join(import.meta.dir, 'workflows/reminder.workflow.ts'),
     activities,
   });
 
