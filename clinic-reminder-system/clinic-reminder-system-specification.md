@@ -28,6 +28,13 @@ This project automates reminders and later follow-up workflows without disruptin
 | Veterinarian | See escalated follow-ups and unresolved case statuses. |
 | Pet owner | Receive timely reminders and simple follow-up questions. |
 
+## Domain model — owners, cases, and phones
+
+- **Owners** are people; they can be linked to **many cases** (multiple pets, or co-owner on another household's pet).
+- **Phone numbers** belong to an owner (their contact inventory).
+- **Per case**, the clinic designates a **primary** and **secondary** mobile for reminders about that pet. Primary is the main WhatsApp contact; secondary is a backup (spouse, co-owner, alternate number).
+- **V0 gap:** primary/secondary are not stored on the case yet — see [[clinic-reminder-system-user-flows]] for the full relationship diagram and the cross-case duplicate edge case.
+
 ## V1 scope — automated reminders
 
 V1 proves the durable backend foundation.
