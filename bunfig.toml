@@ -1,0 +1,7 @@
+# Loaded before `bun run` entrypoints (API, worker, scripts). NestJS decorators need
+# reflect-metadata initialized before any module is evaluated.
+preload = ["./bun-preload.ts"]
+
+[test]
+root = "."
+preload = ["./test/load-env.ts"]

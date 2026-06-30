@@ -1,0 +1,9 @@
+import { Module } from '@nestjs/common';
+
+import { TemporalClientService } from './temporal-client/temporal-client.service';
+
+@Module({
+  providers: [TemporalClientService],
+  exports: [TemporalClientService],
+})
+export class TemporalModule {}
