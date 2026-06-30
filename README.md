@@ -115,25 +115,31 @@ curl -s -X POST "$API/reminders" \
 
 ## Database (Drizzle + Supabase)
 
-| Environment | `DATABASE_URL` |
-|---|---|
-| **Local** | `DATABASE_URL` in `.env` (see `.env.example`) |
-| **Production** | Supabase → Project Settings → Database → Connection string (URI) |
+| Environment | Variable | Used by |
+|---|---|---|
+| **Local** | `DATABASE_URL` | API, worker, `bun run db:migrate` |
+| **Production** | `DATABASE_URL_PRODUCTION` | `bun run db:migrate:prod`, `db:studio:prod` |
+
+Production uses the Supabase **transaction-mode pooler** (port `6543`, IPv4). Copy the URI from Supabase → **Connect** → ORM into `DATABASE_URL_PRODUCTION` in `.env` (see `.env.example`).
 
 | What | Where |
 |---|---|
 | Table definitions | `src/db/schema.ts` |
+| Drizzle Kit config | `drizzle.config.ts` |
 | Generated SQL | `drizzle/*.sql` (after `bun run db:generate`) |
-| Apply migrations | `bun run db:migrate` |
-| Browse visually | `bun run db:studio` |
+| Apply migrations (local) | `bun run db:migrate` |
+| Apply migrations (production) | `bun run db:migrate:prod` |
+| Browse visually (local) | `bun run db:studio` |
+| Browse visually (production) | `bun run db:studio:prod` |
 
 Workflow when you change tables:
 
 1. Edit `src/db/schema.ts`
 2. `bun run db:generate` — creates a new file under `drizzle/`
-3. `bun run db:migrate` — applies pending migrations
+3. `bun run db:migrate` — apply locally
+4. `bun run db:migrate:prod` — apply to hosted Supabase when ready
 
-`src/db/index.ts` opens a Postgres pool and runs migrations — no duplicated DDL.
+`src/db/index.ts` opens a Postgres pool (`prepare: false` on the Supabase pooler) and runs migrations — no duplicated DDL.
 
 ## Docker Compose
 

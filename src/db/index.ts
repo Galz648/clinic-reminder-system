@@ -5,20 +5,24 @@ import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { Pool } from 'pg';
 
 import { env } from '../config/env';
+import { poolOptionsForUrl } from './database-url';
 import * as schema from './schema';
 
 let pool: Pool | undefined;
+let poolConnectionString: string | undefined;
 
 function getPool(connectionString = env.databaseUrl) {
-  if (!pool) {
-    pool = new Pool({ connectionString });
+  if (!pool || poolConnectionString !== connectionString) {
+    pool?.end().catch(() => undefined);
+    pool = new Pool(poolOptionsForUrl(connectionString));
+    poolConnectionString = connectionString;
   }
 
   return pool;
 }
 
 async function waitForDatabase(connectionString = env.databaseUrl, retries = 15) {
-  const probe = new Pool({ connectionString });
+  const probe = new Pool(poolOptionsForUrl(connectionString));
 
   try {
     for (let attempt = 1; attempt <= retries; attempt++) {
@@ -60,7 +64,7 @@ export function createDatabase(connectionString = env.databaseUrl) {
 export async function migrateDatabase(connectionString = env.databaseUrl) {
   await waitForDatabase(connectionString);
 
-  const migrationPool = new Pool({ connectionString });
+  const migrationPool = new Pool(poolOptionsForUrl(connectionString));
   const db = drizzle(migrationPool);
 
   try {

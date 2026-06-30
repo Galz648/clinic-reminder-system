@@ -29,6 +29,10 @@ export const env = {
     return requireEnv('DATABASE_URL');
   },
 
+  get databaseUrlProduction(): string | undefined {
+    return process.env.DATABASE_URL_PRODUCTION?.trim() || undefined;
+  },
+
   get temporalAddress(): string {
     return requireEnv('TEMPORAL_ADDRESS');
   },
