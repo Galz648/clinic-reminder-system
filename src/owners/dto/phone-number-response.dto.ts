@@ -13,6 +13,12 @@ export class PhoneNumberResponseDto {
   @ApiProperty()
   normalizedPhone!: string;
 
+  @ApiProperty({
+    description:
+      'Whether this number can receive WhatsApp reminders. Only Israeli mobile lines are eligible.',
+  })
+  isMobile!: boolean;
+
   @ApiProperty()
   createdAt!: string;
 }

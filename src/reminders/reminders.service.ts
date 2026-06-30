@@ -143,6 +143,12 @@ export class RemindersService {
         `Phone number ${dto.phoneNumberId} does not belong to owner ${dto.ownerId}`,
       );
     }
+
+    if (!phoneNumber.isMobile) {
+      throw new BadRequestException(
+        `Phone number ${dto.phoneNumberId} is not a mobile number; WhatsApp reminders require an Israeli mobile line`,
+      );
+    }
   }
 
   private toResponse(row: typeof reminders.$inferSelect): ReminderResponseDto {

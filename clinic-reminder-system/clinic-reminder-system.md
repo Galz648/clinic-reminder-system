@@ -15,6 +15,7 @@ Parent index: [[Projects]]
 
 - [[clinic-reminder-system-specification]] — summarized scope, phases, deliverables, constraints
 - [[clinic-reminder-system-architecture]] — Mermaid architecture diagrams
+- [[clinic-reminder-system-user-flows]] — V0 assistant user flows (incl. non-mobile edge case)
 - [[clinic-reminder-system-tooling]] — opinionated tools and local runtime shape
 - [[clinic-reminder-system-standalone-examples]] — small throwaway examples to reduce V1 complexity
 - [[Vet Clinic Chrome Extension]] — related future ingestion work

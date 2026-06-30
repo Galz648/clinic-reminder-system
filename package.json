@@ -21,6 +21,7 @@
     "test": "bun test",
     "test:watch": "bun test --watch",
     "test:e2e": "bun test test/",
+    "test:e2e:temporal": "bun test ./e2e/reminders.temporal.e2e.ts",
     "temporal:up": "docker compose up -d",
     "temporal:down": "docker compose down",
     "docker:up": "docker compose up -d",
@@ -40,6 +41,7 @@
     "class-validator": "^0.14.1",
     "dotenv": "^16.4.7",
     "drizzle-orm": "^0.41.0",
+    "libphonenumber-js": "^1.13.7",
     "pg": "^8.14.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2"

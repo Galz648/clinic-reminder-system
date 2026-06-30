@@ -50,10 +50,12 @@ The `temporal` service needs `./dynamicconfig/development-sql.yaml` mounted into
 ## V0 data flow
 
 ```text
-POST /reminders → RemindersService (Drizzle via DbModule)
-                 → Temporal client starts ReminderWorkflow
+POST /reminders → RemindersService validates mobile phone (WhatsApp channel)
+                 → Drizzle insert + Temporal ReminderWorkflow
                  → worker sleeps until dueAt → SendReminderActivity logs + marks sent
 ```
+
+Landlines and VoIP may be stored on an owner, but `POST /reminders` rejects non-mobile numbers with 400. See `clinic-reminder-system/clinic-reminder-system-user-flows.md` for the full V0 user-flow diagram.
 
 ## Quick start
 
@@ -89,7 +91,7 @@ API="$API_PUBLIC_URL"
 OWNER_ID=$(curl -sf -X POST "$API/owners" -H 'content-type: application/json' \
   -d '{"name":"Jane Doe"}' | jq -r .id)
 PHONE_ID=$(curl -sf -X POST "$API/owners/$OWNER_ID/phone-numbers" -H 'content-type: application/json' \
-  -d '{"phone":"+972-50-123-4567"}' | jq -r .id)
+  -d '{"phone":"050-234-5678"}' | jq -r .id)
 CASE_ID=$(curl -sf -X POST "$API/cases" -H 'content-type: application/json' \
   -d '{"petName":"Luna"}' | jq -r .id)
 curl -sf -X POST "$API/cases/$CASE_ID/owners" -H 'content-type: application/json' \
@@ -161,3 +163,4 @@ cd examples/02-temporal-timer && bun run client                  # terminal 2
 | `bun run db:migrate` | Apply migrations to Postgres |
 | `bun test` | Bun test runner (unit + e2e) |
 | `bun run test:e2e` | E2E tests only (`test/`) |
+| `bun run test:e2e:temporal` | Docker-backed reminder workflow e2e (`e2e/`) |

@@ -40,6 +40,7 @@ In scope:
 - Start a Temporal workflow for each reminder.
 - Wait until the due date and fire the reminder.
 - Deduplicate by phone number + reminder type + time window.
+- Reject reminder creation when the chosen phone is not an Israeli mobile (WhatsApp channel).
 - Keep delivery behind a `Sender` interface.
 - Keep ingestion behind a `ClinicDataSource` interface.
 - Test end-to-end locally before deployment.

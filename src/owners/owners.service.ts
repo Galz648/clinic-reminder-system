@@ -8,6 +8,11 @@ import { DATABASE } from '../db/db.constants';
 import { owners, phoneNumbers } from '../db/schema';
 import { CreateOwnerDto } from './dto/create-owner.dto';
 import { CreatePhoneNumberDto } from './dto/create-phone-number.dto';
+import {
+  isIsraeliMobilePhone,
+  normalizeIsraeliPhone,
+  toNormalizedIsraeliPhone,
+} from './dto/israeli-phone.util';
 import { OwnerResponseDto } from './dto/owner-response.dto';
 import { PhoneNumberResponseDto } from './dto/phone-number-response.dto';
 
@@ -52,12 +57,13 @@ export class OwnersService {
     }
 
     const id = randomUUID();
-    const normalizedPhone = dto.phone.replace(/\D/g, '');
+    const canonicalPhone = normalizeIsraeliPhone(dto.phone);
+    const normalizedPhone = toNormalizedIsraeliPhone(dto.phone);
 
     await this.db.insert(phoneNumbers).values({
       id,
       ownerId,
-      phone: dto.phone,
+      phone: canonicalPhone,
       normalizedPhone,
     });
 
@@ -78,7 +84,7 @@ export class OwnersService {
     return this.db.query.phoneNumbers.findMany({
       where: eq(phoneNumbers.ownerId, ownerId),
       orderBy: (table, { desc }) => [desc(table.createdAt)],
-    });
+    }).then((rows) => rows.map((row) => this.toPhoneNumberResponse(row)));
   }
 
   async findPhoneNumberById(id: string): Promise<PhoneNumberResponseDto | null> {
@@ -86,6 +92,19 @@ export class OwnersService {
       where: eq(phoneNumbers.id, id),
     });
 
-    return row ?? null;
+    return row ? this.toPhoneNumberResponse(row) : null;
+  }
+
+  private toPhoneNumberResponse(
+    row: typeof phoneNumbers.$inferSelect,
+  ): PhoneNumberResponseDto {
+    return {
+      id: row.id,
+      ownerId: row.ownerId,
+      phone: row.phone,
+      normalizedPhone: row.normalizedPhone,
+      isMobile: isIsraeliMobilePhone(row.phone),
+      createdAt: row.createdAt,
+    };
   }
 }
