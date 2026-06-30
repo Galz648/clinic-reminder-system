@@ -1,0 +1,41 @@
+# Blueprint: Temporal stack (Postgres + server)
+#
+# Apply first. Dashboard → New → Blueprint → Blueprint path: render/temporal.yaml
+# Docs: clinic-reminder-system/clinic-reminder-system-render-deployment.md
+
+databases:
+  - name: temporal-db
+    plan: basic-256mb # always-on; no 30-day expiry
+    region: singapore
+    databaseName: temporal
+    user: temporal
+
+services:
+  - type: pserv
+    name: temporal
+    runtime: image
+    region: singapore
+    plan: starter # always-on ($7/mo)
+    image:
+      url: docker.io/temporalio/auto-setup:1.25.2
+    envVars:
+      - key: DB
+        value: postgres12
+      - key: BIND_ON_IP
+        value: 0.0.0.0
+      - key: DB_PORT
+        fromDatabase:
+          name: temporal-db
+          property: port
+      - key: POSTGRES_USER
+        fromDatabase:
+          name: temporal-db
+          property: user
+      - key: POSTGRES_PWD
+        fromDatabase:
+          name: temporal-db
+          property: password
+      - key: POSTGRES_SEEDS
+        fromDatabase:
+          name: temporal-db
+          property: host

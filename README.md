@@ -10,6 +10,17 @@ V0 scaffolding for a veterinary clinic reminder backend. See `clinic-reminder-sy
 - **OpenAPI** — Swagger at `/docs`
 - **Bun** — package runner and test runner
 
+## Production (Render)
+
+| Service | URL / host |
+|---|---|
+| API | https://clinic-api-wei1.onrender.com |
+| App DB | Supabase Postgres (not on Render) |
+| Temporal | Render private service `temporal-gr9y:7233` |
+| Worker | `clinic-worker` (background) on Render |
+
+Blueprints: [`render/temporal.yaml`](render/temporal.yaml), [`render/clinic-app.yaml`](render/clinic-app.yaml). Full status, env vars, networking, and Temporal UI options: [`clinic-reminder-system/clinic-reminder-system-render-deployment.md`](clinic-reminder-system/clinic-reminder-system-render-deployment.md).
+
 ## Bun + NestJS
 
 NestJS relies on `reflect-metadata` for decorators and dependency injection. When you run the app or worker through Bun (`bun run start:worker`, `bun run db:migrate`, etc.), that polyfill must load **before** any Nest module is imported.

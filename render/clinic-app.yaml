@@ -1,0 +1,61 @@
+# Blueprint: Clinic app (NestJS API + Temporal worker)
+#
+# Apply after render/temporal.yaml (needs private service named `temporal`).
+# Dashboard → New → Blueprint → Blueprint path: render/clinic-app.yaml
+# App data lives on Supabase — not Render Postgres.
+
+services:
+  - type: web
+    name: clinic-api
+    runtime: node
+    region: singapore
+    plan: starter # always-on ($7/mo)
+    buildCommand: bun install && bun run build
+    preDeployCommand: DATABASE_TARGET=production bun run db:migrate:prod
+    startCommand: bun src/main.ts
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false # Supabase transaction pooler URI
+      - key: DATABASE_URL_PRODUCTION
+        sync: false # Same URI; used by db:migrate:prod
+      - key: API_PUBLIC_URL
+        fromService:
+          name: clinic-api
+          type: web
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_TASK_QUEUE
+        value: reminder-queue
+      - key: TEMPORAL_ADDRESS
+        fromService:
+          name: temporal
+          type: pserv
+          property: hostport
+
+  - type: worker
+    name: clinic-worker
+    runtime: node
+    region: singapore
+    plan: starter # always-on ($7/mo)
+    buildCommand: bun install && bun run build
+    startCommand: bun run start:worker
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false # Supabase transaction pooler URI
+      - key: TEMPORAL_NAMESPACE
+        value: default
+      - key: TEMPORAL_TASK_QUEUE
+        value: reminder-queue
+      - key: TEMPORAL_ADDRESS
+        fromService:
+          name: temporal
+          type: pserv
+          property: hostport
