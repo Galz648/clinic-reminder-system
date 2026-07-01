@@ -1,1 +1,2 @@
-bun test
+bun run typecheck:precommit
+bun run test:precommit

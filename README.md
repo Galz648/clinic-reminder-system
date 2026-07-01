@@ -19,7 +19,17 @@ V0 scaffolding for a veterinary clinic reminder backend. See `clinic-reminder-sy
 | Temporal | Render private service `temporal-gr9y:7233` |
 | Worker | `clinic-worker` (background) on Render |
 
-Blueprints: [`render/temporal.yaml`](render/temporal.yaml), [`render/clinic-app.yaml`](render/clinic-app.yaml). Full status, env vars, networking, and Temporal UI options: [`clinic-reminder-system/clinic-reminder-system-render-deployment.md`](clinic-reminder-system/clinic-reminder-system-render-deployment.md).
+Blueprints: [`render/temporal.yaml`](render/temporal.yaml), [`render/clinic-app.yaml`](render/clinic-app.yaml). Full runbook: [`clinic-reminder-system/clinic-reminder-system-render-deployment.md`](clinic-reminder-system/clinic-reminder-system-render-deployment.md).
+
+**Production Temporal UI / CLI** (SSH tunnel — keep terminal open):
+
+```bash
+bun run temporal:prod:tunnel
+# Browser: http://localhost:8080
+# CLI:     TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=default temporal workflow list
+```
+
+Requires [Render SSH key](https://dashboard.render.com/u/settings#ssh-public-keys) and `render login`. SSH keys are added in the **Dashboard only** (not via CLI).
 
 ## Bun + NestJS
 

@@ -13,7 +13,8 @@ Tooling: [[clinic-reminder-system-tooling]]
 | Temporal persistence DB | **Render** Singapore | Render Postgres (`temporal-db`) | **Live** — `basic_256mb`, internal hostname only (IP allow list cleared) |
 | NestJS API | **Render** Singapore | `web` (`clinic-api`) | **Live** — https://clinic-api-wei1.onrender.com |
 | Temporal worker | **Render** Singapore | `worker` (`clinic-worker`) | **Live** — polls `reminder-queue` |
-| Temporal UI | — | not deployed | **Missing** — see [Temporal UI (next step)](#temporal-ui-next-step) |
+| Temporal UI | — | SSH tunnel from laptop | **Via tunnel** — not public; see below |
+
 | Render Blueprints (IaC) | this repo `render/` | Dashboard sync | **Missing** — services created via CLI; Blueprints not linked yet |
 | GitHub → Render (private repo) | GitHub | OAuth | **N/A** — repo is **public**; CLI deploy works without linking |
 
@@ -33,7 +34,7 @@ Tooling: [[clinic-reminder-system-tooling]]
 | Item | Why | How |
 |---|---|---|
 | **Link Blueprints** | IaC drift — CLI config not managed by YAML sync | Dashboard → New → Blueprint → `render/temporal.yaml`, then `render/clinic-app.yaml` (adopts existing resources by name) |
-| **Temporal UI** | Cannot inspect workflows in prod today | See [Temporal UI (next step)](#temporal-ui-next-step) |
+| **Temporal UI** | Inspect workflows in prod | `bun run temporal:prod:tunnel` → http://localhost:8080 |
 | **Commit blueprint + docs** | Repo was ahead of `main` | This commit |
 | **Optional: make repo private again** | Source is public for Render CLI deploy | GitHub visibility + connect Render GitHub app |
 | **Optional: `.bun-version`** | Pin Bun on Render (currently 1.3.4 default) | Add file with `1.3.11` to match local |
@@ -255,31 +256,74 @@ This repo uses Bun locally. On Render ([Bun docs](https://bun.com/docs/guides/de
 
 Optional: add `.bun-version` with `1.3.11` to match local.
 
-## Temporal UI (next step)
+## Production Temporal UI and CLI (SSH tunnel)
 
-**Not deployed in production.** The `temporalio/auto-setup` image includes UI on port **8080** inside the container, but our Blueprint only exposes the gRPC frontend on the private network — there is no public URL.
+Production Temporal is a **private service** — no public URL. Access from your laptop via **SSH port-forward** through Render (no extra services or deploy).
 
-Options (pick one in a follow-up):
+The `temporalio/auto-setup` container already serves UI on **8080** and gRPC on **7233** inside the instance.
 
-| Option | Exposure | Pros | Cons |
-|---|---|---|---|
-| **A. SSH port-forward** | Local only | No new services; works with current `temporal` pserv | Manual; requires SSH key in Render |
-| **B. Add `temporal-ui` pserv** | Private + SSH tunnel | Matches Render Temporal docs; stays off public internet | Extra Starter service (~$7/mo) or share `temporal` container ports |
-| **C. Add `temporal-ui` web + auth** | Public URL | Easy browser access | Must add password/OAuth; clinic data visible in UI |
-| **D. Temporal Cloud UI** | Temporal Cloud | Managed; no self-hosted UI | Migrates Temporal off Render |
-| **E. Local UI → prod** | Dev machine | `tctl` / Temporal CLI against forwarded gRPC | Not a shared team UI |
+### One-time setup
 
-### Option A — SSH port-forward (quickest, no deploy)
+1. Install Render CLI: `brew install render` → `render login`
+2. Add your **SSH public key** to [Render Account Settings → SSH Keys](https://dashboard.render.com/u/settings#ssh-public-keys)
+
+   **Cannot be done via CLI** — Render has no `render ssh-keys add` command; Dashboard only.
+
+   ```bash
+   # If you don't have a key yet:
+   ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519
+
+   # Copy public key to clipboard (macOS), then paste in Dashboard:
+   pbcopy < ~/.ssh/id_ed25519.pub
+   ```
+
+3. Verify (should NOT say `Permission denied`):
+
+   ```bash
+   ssh -o BatchMode=yes srv-d91pim8js32c739rb0d0@ssh.singapore.render.com echo ok
+   # → ok
+   ```
+
+   If it fails, compare `ssh-add -l` fingerprint with keys listed in Dashboard. Singapore host fingerprint: `SHA256:CUlRyv4TZ0vmHwmhsJkII/pz2cO4IgvR+ykqnRsOQFs` ([Render SSH docs](https://render.com/docs/ssh)).
+
+### Open the tunnel
 
 ```bash
-# Forward Temporal UI (8080) and/or gRPC (7233) from the private service
-render ssh temporal -- -L 8080:localhost:8080 -L 7233:localhost:7233
-# Browser: http://localhost:8080
+bun run temporal:prod:tunnel
+# or: scripts/temporal-prod-tunnel.sh
 ```
 
-Requires [SSH keys on Render](https://render.com/docs/ssh-keys). UI talks to Temporal on `localhost:7233` inside the container.
+Keep that terminal open. Then:
 
-### Option B — dedicated UI private service (recommended for prod ops)
+| Tool | How |
+|---|---|
+| **Browser UI** | http://localhost:8080 |
+| **Temporal CLI** | `TEMPORAL_ADDRESS=localhost:7233 TEMPORAL_NAMESPACE=default temporal workflow list` |
+| **CLI profile** | `temporal env set render-prod --address localhost:7233 --namespace default` then `temporal --env render-prod workflow list` |
+
+Namespace is `default`. Task queue for this app: `reminder-queue`.
+
+### What does not work
+
+- `TEMPORAL_ADDRESS=temporal-gr9y:7233` from your laptop — that hostname is **Render private network only**
+- UI without the tunnel running
+
+### Later alternatives
+
+If SSH tunnels become awkward for the team, consider a dedicated `temporal-ui` private service, a public web UI with auth, or Temporal Cloud. See [Temporal UI alternatives](#temporal-ui-alternatives) below.
+
+## Temporal UI alternatives
+
+Not deployed — documented for later if SSH tunnels are not enough.
+
+| Option | Exposure | When |
+|---|---|---|
+| **SSH port-forward** (current) | Local only | Solo dev / ops; zero extra cost |
+| **`temporal-ui` pserv** | Private + tunnel | Shared team, still off public internet (~$7/mo) |
+| **`temporal-ui` web + auth** | Public URL | Browser access with password/OAuth |
+| **Temporal Cloud** | Cloud | Skip self-hosted Temporal on Render |
+
+### Dedicated UI private service (not deployed)
 
 Add to `render/temporal.yaml` (or a third Blueprint `render/temporal-ui.yaml`):
 
@@ -301,11 +345,11 @@ Add to `render/temporal.yaml` (or a third Blueprint `render/temporal-ui.yaml`):
         value: http://localhost:8080
 ```
 
-Access via `render ssh temporal-ui -- -L 8080:8080` (or tunnel from your machine).
+Access via `render ssh temporal-ui -- -L 8080:8080`.
 
-### Option C — public web (only with access control)
+### Public web UI (not deployed; access control required)
 
-Deploy `temporalio/ui` as `type: web`, set `TEMPORAL_ADDRESS` via private hostname (Render web services can reach pserv on the private network). **Add** HTTP basic auth or Render IP rules on the web service — do not leave workflow history public.
+Deploy `temporalio/ui` as `type: web`, set `TEMPORAL_ADDRESS` via private hostname. Add HTTP basic auth or Render IP rules — do not leave workflow history public.
 
 ---
 
@@ -319,7 +363,7 @@ Legacy note: the [temporal-render-simple](https://github.com/temporalio/temporal
 4. `GET https://clinic-api-wei1.onrender.com/` → `Hello World!`; Swagger at `/docs` if enabled.
 5. Worker logs: `Temporal worker listening on task queue "reminder-queue"`.
 6. `POST /reminders` → `workflowId` returned; reminder becomes `sent` at `dueAt` (verified 2026-06-30).
-7. **Pending:** workflow visible in Temporal UI (after UI option chosen above).
+7. Production Temporal UI: `bun run temporal:prod:tunnel` → http://localhost:8080 shows workflows.
 8. **Pending:** Blueprints linked in Dashboard (`render/temporal.yaml`, `render/clinic-app.yaml`).
 ## Alternatives
 

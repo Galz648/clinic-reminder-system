@@ -134,7 +134,7 @@ Earlier option B (`POST /reminders/ensure` + `EntityResolver`) is superseded for
 4. Interceptors on `POST /reminders` call resolver → upsert → body rewrite → `RemindersService.create` (see [[v0-reminder-resolve-interceptors]]).
 5. Keep existing granular endpoints for manual assistant and tests.
 
-Defer C/D until we know how the clinic system is accessed (extension session vs API vs export).
+Defer C/D until we know how the clinic system is accessed (extension session vs API vs export). **Login/session for Clinica Online:** [[v0-clinica-login]].
 
 ## Primary flow — external intent to scheduled reminder (target)
 
@@ -202,7 +202,7 @@ flowchart LR
 | # | Question |
 |---|---|
 | 1 | What identifier does the clinic system expose? (customer id, animal id, appointment id?) |
-| 2 | Can we read it via API, export, or only through a browser session (extension)? |
+| 2 | Can we read it via API, export, or only through a browser session (extension)? **Update (2026-06-30):** server-side WebForms login + ASMX JSON — see [[v0-clinica-login]]. |
 | 3 | Who picks primary mobile when an owner has several — assistant, rules, or stored per case? |
 | 4 | Should `POST /reminders/ensure` be idempotent on `(externalCaseId, reminderType, dueAt window)`? |
 | 5 | Do we resolve synchronously in the HTTP request or return 202 + poll? (V0: sync is fine at low volume) |

@@ -1,0 +1,11 @@
+{
+  "name": "example-03-clinica-online-auth",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/probe.ts"
+  },
+  "devDependencies": {
+    "bun-types": "latest"
+  }
+}

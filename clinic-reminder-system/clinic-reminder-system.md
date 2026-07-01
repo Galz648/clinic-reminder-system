@@ -19,7 +19,7 @@ Parent index: [[Projects]]
 - [[clinic-reminder-system-tooling]] — opinionated tools and local runtime shape
 - [[clinic-reminder-system-render-deployment]] — Render setup (Temporal + NestJS API + worker)
 - [[clinic-reminder-system-standalone-examples]] — small throwaway examples to reduce V1 complexity
-- V0 design drafts — [[v0/v0-external-resolve-before-reminder]] (problem + approaches), [[v0/v0-reminder-resolve-interceptors]] (chosen: NestJS interceptors, spec only)
+- V0 design drafts — [[v0/v0-external-resolve-before-reminder]], [[v0/v0-reminder-resolve-interceptors]], [[v0/v0-clinica-login]], [[v0/v0-clinica-load-reminders]]
 - [[Vet Clinic Chrome Extension]] — related future ingestion work
 - [[Vet Internship]] — clinic context
 

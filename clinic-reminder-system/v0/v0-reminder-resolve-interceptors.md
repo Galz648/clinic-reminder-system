@@ -10,6 +10,7 @@ project: "[[clinic-reminder-system]]"
 
 Project: [[clinic-reminder-system]]
 Problem context: [[v0-external-resolve-before-reminder]]
+Clinica login (external backend): [[v0-clinica-login]]
 User flows (today): [[clinic-reminder-system-user-flows]]
 Architecture: [[clinic-reminder-system-architecture]]
 

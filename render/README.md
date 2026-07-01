@@ -25,4 +25,6 @@ render blueprints validate ./render/clinic-app.yaml -o json --confirm
 
 Applying Blueprints is Dashboard-only (CLI v2.21). Services already created via CLI can be adopted by syncing the matching Blueprint path.
 
+**Production Temporal UI:** `bun run temporal:prod:tunnel` → http://localhost:8080 (SSH key required; see deployment doc).
+
 Full runbook: [`clinic-reminder-system/clinic-reminder-system-render-deployment.md`](../clinic-reminder-system/clinic-reminder-system-render-deployment.md)

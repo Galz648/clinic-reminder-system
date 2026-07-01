@@ -4,3 +4,14 @@ dist/
 .DS_Store
 coverage/
 .turbo/
+
+# Browser HAR captures (may contain cookies, credentials, PII — keep local only)
+*.har
+examples/**/*.har
+
+# TypeScript incremental build cache (stale/locked cache can hang `tsc --noEmit`)
+*.tsbuildinfo
+
+# macOS duplicate copies (Finder "Copy" / conflict names)
+**/* 2
+**/* 2.*
